@@ -54,30 +54,39 @@ async def guess(interaction: discord.Interaction, number: int):
     else:
         await interaction.response.send_message("🔻 もっと小さい数字だよ！")
 # /kick コマンド
+from discord import app_commands
+from discord.ext import commands
+
 @bot.tree.command(name="kick", description="指定したメンバーをキックします")
+@app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member="キックするメンバー", reason="理由（任意）")
 async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "理由なし"):
-    if not interaction.user.guild_permissions.kick_members:
-        await interaction.response.send_message("⚠ あなたにはキックする権限がありません。", ephemeral=True)
+    if member == interaction.client.user:
+        await interaction.response.send_message("❌ 自分自身をキックすることはできません。", ephemeral=True)
         return
     try:
         await member.kick(reason=reason)
-        await interaction.response.send_message(f"✅ {member.mention} をキックしました（理由: {reason}）")
+        await interaction.response.send_message(f"✅ {member.mention} をキックしました。理由: {reason}")
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ キックに失敗しました: 権限がありません。", ephemeral=True)
     except Exception as e:
-        await interaction.response.send_message(f"❌ キックに失敗しました: {e}", ephemeral=True)
+        await interaction.response.send_message(f"❌ エラーが発生しました: {e}", ephemeral=True)
 
 # /ban コマンド
 @bot.tree.command(name="ban", description="指定したメンバーをBANします")
+@app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member="BANするメンバー", reason="理由（任意）")
 async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = "理由なし"):
-    if not interaction.user.guild_permissions.ban_members:
-        await interaction.response.send_message("⚠ あなたにはBANする権限がありません。", ephemeral=True)
+    if member == interaction.client.user:
+        await interaction.response.send_message("❌ 自分自身をBANすることはできません。", ephemeral=True)
         return
     try:
         await member.ban(reason=reason)
-        await interaction.response.send_message(f"✅ {member.mention} をBANしました（理由: {reason}）")
+        await interaction.response.send_message(f"✅ {member.mention} をBANしました。理由: {reason}")
+    except discord.Forbidden:
+        await interaction.response.send_message("❌ BANに失敗しました: 権限がありません。", ephemeral=True)
     except Exception as e:
-        await interaction.response.send_message(f"❌ BANに失敗しました: {e}", ephemeral=True)
+        await interaction.response.send_message(f"❌ エラーが発生しました: {e}", ephemeral=True)
 
 # --- 起動部分 ---
 def start():
