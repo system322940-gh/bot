@@ -4,6 +4,7 @@ from discord import app_commands
 import aiofiles
 import asyncio
 import os
+import random  # 数字当てゲームに必要
 
 # グローバルチャットに登録するチャンネルIDを保存するファイル
 GLOBAL_CHAT_FILE = "globalchatchannels.txt"
@@ -18,10 +19,13 @@ tree = bot.tree  # スラッシュコマンド用ツリー
 # Webhookのキャッシュ（チャンネルID: webhook）
 webhook_cache = {}
 
+# --- 数字当てゲーム用 ---
+target_number = None
+game_active = False
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    # スラッシュコマンドをDiscordに同期（初回起動時や更新時に必要）
     await tree.sync()
     print("Slash commands synced.")
 
@@ -40,15 +44,17 @@ async def add_global_chat(interaction: discord.Interaction):
             await f.write(f"{channel_id}\n")
         await interaction.response.send_message("✅ このチャンネルをグローバルチャットに登録しました。")
     except Exception as e:
-        await interaction.response.send_message(f"❌ 登録中にエラーが発生しました: {e}", ephemeral=True)
+        if not interaction.response.is_done():
+            await interaction.response.send_message(f"❌ 登録中にエラーが発生しました: {e}", ephemeral=True)
+        else:
+            await interaction.followup.send(f"❌ 登録中にエラーが発生しました: {e}", ephemeral=True)
 
+# メッセージ送信イベント
 @bot.event
 async def on_message(message):
-    # Bot自身のメッセージは無視
     if message.author.bot:
         return
 
-    # 登録チャンネル一覧読み込み
     try:
         async with aiofiles.open(GLOBAL_CHAT_FILE, mode='r') as f:
             lines = await f.readlines()
@@ -56,11 +62,9 @@ async def on_message(message):
     except FileNotFoundError:
         channel_ids = []
 
-    # 登録されていないチャンネルなら処理しない
     if message.channel.id not in channel_ids:
         return
 
-    # メッセージを他のグローバルチャットチャンネルにWebhookで送信
     for cid in channel_ids:
         if cid == message.channel.id:
             continue
@@ -69,7 +73,6 @@ async def on_message(message):
         if not channel:
             continue
 
-        # Webhookをキャッシュから取得、なければ作成してキャッシュに保存
         webhook = webhook_cache.get(cid)
         if webhook is None:
             webhooks = await channel.webhooks()
@@ -87,9 +90,9 @@ async def on_message(message):
         except Exception as e:
             print(f"Webhook送信エラー: チャンネルID {cid} - {e}")
 
-    # コマンドの処理も行う（もしコマンドがメッセージとして入ってきた場合）
     await bot.process_commands(message)
-    # --- 数字当てゲーム ---
+
+# --- 数字当てゲーム ---
 @tree.command(name="game", description="1～100の数字当てゲームを開始します")
 async def game(interaction: discord.Interaction):
     global target_number, game_active
@@ -156,7 +159,6 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
     except Exception as e:
         await interaction.response.send_message(f"❌ エラーが発生しました: {e}", ephemeral=True)
 
-
+# --- Bot起動 ---
 TOKEN = os.getenv("DISCORD_TOKEN")
-
 bot.run(TOKEN)
