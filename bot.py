@@ -89,5 +89,7 @@ async def on_message(message):
     # コマンドの処理も行う（もしコマンドがメッセージとして入ってきた場合）
     await bot.process_commands(message)
 
-# Bot起動
-bot.run("DISCORD_TOKEN")
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+
+bot.run(TOKEN)
