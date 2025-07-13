@@ -1,4 +1,13 @@
+import discord
+from discord import app_commands
+from discord.ext import commands
 import aiofiles
+
+intents = discord.Intents.default()
+intents.message_content = True  # メッセージ内容を取得するために必要
+
+bot = commands.Bot(command_prefix="!", intents=intents)
+tree = bot.tree  # ここでtreeを定義する
 
 GLOBAL_CHAT_FILE = "globalchatchannels.txt"
 
@@ -49,3 +58,11 @@ async def on_message(message):
                 username=message.author.display_name,
                 avatar_url=message.author.display_avatar.url
             )
+
+# コマンドツリーの同期
+@bot.event
+async def on_ready():
+    await tree.sync()
+    print(f"Logged in as {bot.user}")
+
+bot.run("YOUR_BOT_TOKEN")
