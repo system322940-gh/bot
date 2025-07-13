@@ -9,9 +9,10 @@ import random  # 数字当てゲームに必要
 # グローバルチャットに登録するチャンネルIDを保存するファイル
 GLOBAL_CHAT_FILE = "globalchatchannels.txt"
 
-# intentsの設定（message_contentが必要）
+# intentsの設定（message_contentとguildsが必要）
 intents = discord.Intents.default()
 intents.message_content = True
+intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree  # スラッシュコマンド用ツリー
@@ -71,15 +72,23 @@ async def on_message(message):
 
         channel = bot.get_channel(cid)
         if not channel:
+            print(f"❌ チャンネルが取得できなかった: {cid}")
             continue
 
         webhook = webhook_cache.get(cid)
         if webhook is None:
-            webhooks = await channel.webhooks()
-            webhook = next((w for w in webhooks if w.name == "GlobalChat"), None)
-            if not webhook:
-                webhook = await channel.create_webhook(name="GlobalChat")
-            webhook_cache[cid] = webhook
+            try:
+                webhooks = await channel.webhooks()
+                webhook = next((w for w in webhooks if w.name == "GlobalChat"), None)
+                if not webhook:
+                    webhook = await channel.create_webhook(name="GlobalChat")
+                webhook_cache[cid] = webhook
+            except discord.Forbidden:
+                print(f"❌ Webhook作成失敗: 権限不足（チャンネルID: {cid}）")
+                continue
+            except Exception as e:
+                print(f"❌ Webhook作成エラー: {e}")
+                continue
 
         try:
             await webhook.send(
