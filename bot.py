@@ -90,4 +90,4 @@ async def on_message(message):
     await bot.process_commands(message)
 
 # Bot起動
-bot.run("YOUR_DISCORD_TOKEN")
+bot.run("DISCORD_TOKEN")
