@@ -6,7 +6,7 @@ from discord import app_commands
 import random
 import os
 
-# --- Flask部分（RenderのためのダミーWeb） ---
+# --- Flask部分（Render用のダミーWeb） ---
 app = Flask(__name__)
 @app.route("/")
 def home():
@@ -28,6 +28,7 @@ async def on_ready():
     await tree.sync()
     print(f"Bot ready: {bot.user}")
 
+# --- 数字当てゲーム ---
 @tree.command(name="game", description="1～100の数字当てゲームを開始します")
 async def game(interaction: discord.Interaction):
     global target_number, game_active
@@ -53,11 +54,18 @@ async def guess(interaction: discord.Interaction, number: int):
         await interaction.response.send_message("🔺 もっと大きい数字だよ！")
     else:
         await interaction.response.send_message("🔻 もっと小さい数字だよ！")
-# /kick コマンド
-from discord import app_commands
-from discord.ext import commands
 
-@bot.tree.command(name="kick", description="指定したメンバーをキックします")
+@tree.command(name="cancel", description="進行中のゲームをキャンセルします")
+async def cancel_game(interaction: discord.Interaction):
+    global game_active
+    if game_active:
+        game_active = False
+        await interaction.response.send_message("✅ ゲームをキャンセルしました。", ephemeral=True)
+    else:
+        await interaction.response.send_message("⚠️ 進行中のゲームはありません。", ephemeral=True)
+
+# --- 管理者用コマンド ---
+@tree.command(name="kick", description="指定したメンバーをキックします")
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member="キックするメンバー", reason="理由（任意）")
 async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "理由なし"):
@@ -72,8 +80,7 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
     except Exception as e:
         await interaction.response.send_message(f"❌ エラーが発生しました: {e}", ephemeral=True)
 
-# /ban コマンド
-@bot.tree.command(name="ban", description="指定したメンバーをBANします")
+@tree.command(name="ban", description="指定したメンバーをBANします")
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member="BANするメンバー", reason="理由（任意）")
 async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = "理由なし"):
