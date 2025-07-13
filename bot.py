@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import aiofiles
 import asyncio
+import os
 
 # グローバルチャットに登録するチャンネルIDを保存するファイル
 GLOBAL_CHAT_FILE = "globalchatchannels.txt"
