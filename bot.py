@@ -1,24 +1,16 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import aiofiles
-import asyncio
 import os
-import random  # 数字当てゲームに必要
+import random
 
-# グローバルチャットに登録するチャンネルIDを保存するファイル
-GLOBAL_CHAT_FILE = "globalchatchannels.txt"
-
-# intentsの設定（message_contentとguildsが必要）
+# --- Discord bot setup ---
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-tree = bot.tree  # スラッシュコマンド用ツリー
-
-# Webhookのキャッシュ（チャンネルID: webhook）
-webhook_cache = {}
+tree = bot.tree
 
 # --- 数字当てゲーム用 ---
 target_number = None
@@ -29,77 +21,6 @@ async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
     await tree.sync()
     print("Slash commands synced.")
-
-# /addglobalchat コマンド（管理者権限のみ）
-@tree.command(name="addglobalchat", description="このチャンネルをグローバルチャットに追加します")
-@app_commands.checks.has_permissions(administrator=True)
-async def add_global_chat(interaction: discord.Interaction):
-    channel_id = interaction.channel.id
-    try:
-        async with aiofiles.open(GLOBAL_CHAT_FILE, mode='a+') as f:
-            await f.seek(0)
-            lines = await f.readlines()
-            if f"{channel_id}\n" in lines:
-                await interaction.response.send_message("⚠️ このチャンネルはすでに登録されています。", ephemeral=True)
-                return
-            await f.write(f"{channel_id}\n")
-        await interaction.response.send_message("✅ このチャンネルをグローバルチャットに登録しました。")
-    except Exception as e:
-        if not interaction.response.is_done():
-            await interaction.response.send_message(f"❌ 登録中にエラーが発生しました: {e}", ephemeral=True)
-        else:
-            await interaction.followup.send(f"❌ 登録中にエラーが発生しました: {e}", ephemeral=True)
-
-# メッセージ送信イベント
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-
-    try:
-        async with aiofiles.open(GLOBAL_CHAT_FILE, mode='r') as f:
-            lines = await f.readlines()
-            channel_ids = [int(line.strip()) for line in lines]
-    except FileNotFoundError:
-        channel_ids = []
-
-    if message.channel.id not in channel_ids:
-        return
-
-    for cid in channel_ids:
-        if cid == message.channel.id:
-            continue
-
-        channel = bot.get_channel(cid)
-        if not channel:
-            print(f"❌ チャンネルが取得できなかった: {cid}")
-            continue
-
-        webhook = webhook_cache.get(cid)
-        if webhook is None:
-            try:
-                webhooks = await channel.webhooks()
-                webhook = next((w for w in webhooks if w.name == "GlobalChat"), None)
-                if not webhook:
-                    webhook = await channel.create_webhook(name="GlobalChat")
-                webhook_cache[cid] = webhook
-            except discord.Forbidden:
-                print(f"❌ Webhook作成失敗: 権限不足（チャンネルID: {cid}）")
-                continue
-            except Exception as e:
-                print(f"❌ Webhook作成エラー: {e}")
-                continue
-
-        try:
-            await webhook.send(
-                content=message.content,
-                username=message.author.display_name,
-                avatar_url=message.author.display_avatar.url
-            )
-        except Exception as e:
-            print(f"Webhook送信エラー: チャンネルID {cid} - {e}")
-
-    await bot.process_commands(message)
 
 # --- 数字当てゲーム ---
 @tree.command(name="game", description="1～100の数字当てゲームを開始します")
@@ -168,6 +89,17 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
     except Exception as e:
         await interaction.response.send_message(f"❌ エラーが発生しました: {e}", ephemeral=True)
 
+# --- sayコマンド（スパム対策つき） ---
+@tree.command(name="say", description="Botに好きなことを言わせる（送信者名つき）")
+@app_commands.describe(message="Botに言わせたい内容")
+async def say(interaction: discord.Interaction, message: str):
+    sender_name = interaction.user.display_name
+    await interaction.response.send_message("✅ 発言しました", ephemeral=True)
+    await interaction.channel.send(f"💬 **{sender_name} さんの発言依頼:**\n{message}")
+
 # --- Bot起動 ---
 TOKEN = os.getenv("DISCORD_TOKEN")
+if not TOKEN:
+    raise ValueError("❌ DISCORD_TOKENが設定されていません。環境変数で設定してください。")
+
 bot.run(TOKEN)
