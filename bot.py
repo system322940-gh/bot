@@ -87,22 +87,28 @@ async def ban(interaction: discord.Interaction, member: discord.Member, reason: 
     except Exception as e:
         await interaction.response.send_message(f"❌ エラーが発生しました: {e}", ephemeral=True)
 
-# --- sayコマンド（メッセージの下に送信者名を表示） ---
-@tree.command(name="say", description="Botに好きなことを言わせる（送信者名をメッセージの下に表示）")
+@tree.command(name="say", description="Botに好きなことを言わせる")
 @app_commands.describe(
     message="Botに言わせたい内容",
-    embed="埋め込み形式で送るかどうか（True/False、デフォルトはFalse）"
+    embed="埋め込み形式で送るか（True/False）"
 )
 async def say(interaction: discord.Interaction, message: str, embed: bool = False):
     sender_name = interaction.user.display_name
-    await interaction.response.send_message("✅ 発言しました", ephemeral=True)
 
-    if embed:
-        embed_obj = discord.Embed(description=message, color=discord.Color.blurple())
-        await interaction.channel.send(embed=embed_obj)
-        await interaction.channel.send(f"💬 送信者: **{sender_name}**")
-    else:
-        await interaction.channel.send(f"{message}\n\n💬 送信者: **{sender_name}**")
+    # まず即レス（3秒以内に）する
+    await interaction.response.send_message("✅ 発言準備中...", ephemeral=True)
+
+    try:
+        if embed:
+            embed_obj = discord.Embed(description=message, color=discord.Color.blurple())
+            embed_obj.set_footer(text=f"送信者: {sender_name}")
+            await interaction.channel.send(embed=embed_obj)
+        else:
+            await interaction.channel.send(f"{message}\n\n💬 送信者: **{sender_name}**")
+
+    except Exception as e:
+        await interaction.followup.send(f"❌ メッセージ送信中にエラーが発生しました: {e}", ephemeral=True)
+
 
 # --- Bot起動 ---
 TOKEN = os.getenv("DISCORD_TOKEN")
