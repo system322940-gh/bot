@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import random
+import os
 
 intents = discord.Intents.default()
 intents.members = True
@@ -21,7 +22,6 @@ async def servermember(interaction: discord.Interaction):
     if not interaction.guild:
         await interaction.response.send_message("サーバー内で使ってね。", ephemeral=True)
         return
-
     count = interaction.guild.member_count
     await interaction.response.send_message(f"このサーバーのメンバー数は **{count}人** です！")
 
@@ -31,7 +31,6 @@ async def ban(interaction: discord.Interaction, user: discord.Member, reason: st
     if not interaction.user.guild_permissions.ban_members:
         await interaction.response.send_message("🚫 BANする権限がありません。", ephemeral=True)
         return
-
     try:
         await user.ban(reason=reason)
         await interaction.response.send_message(f"{user.mention} をBANしました。理由: {reason}")
@@ -44,7 +43,6 @@ async def kick(interaction: discord.Interaction, user: discord.Member, reason: s
     if not interaction.user.guild_permissions.kick_members:
         await interaction.response.send_message("🚫 KICKする権限がありません。", ephemeral=True)
         return
-
     try:
         await user.kick(reason=reason)
         await interaction.response.send_message(f"{user.mention} をKICKしました。理由: {reason}")
@@ -61,16 +59,15 @@ class AuthButton(discord.ui.View):
         super().__init__(timeout=None)
         self.user = user
         self.role = role
-        self.num1 = random.randint(1, 10)
-        self.num2 = random.randint(1, 10)
 
     @discord.ui.button(label="認証", style=discord.ButtonStyle.primary)
     async def auth(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user != self.user:
             await interaction.response.send_message("これはあなた専用の認証です。", ephemeral=True)
             return
-
-        await interaction.response.send_modal(AuthModal(self.num1, self.num2, self.role))
+        num1 = random.randint(1, 10)
+        num2 = random.randint(1, 10)
+        await interaction.response.send_modal(AuthModal(num1, num2, self.role))
 
 class AuthModal(discord.ui.Modal, title="認証確認"):
     def __init__(self, num1, num2, role):
@@ -119,4 +116,5 @@ async def rp(interaction: discord.Interaction, title: str, role: discord.Role):
     await interaction.response.send_message("✅ ロール付与ボタンを作成しました。", ephemeral=True)
     await interaction.channel.send(embed=discord.Embed(title=title, color=discord.Color.green()), view=view)
 
-bot.run("MTM5MzgwODA5NjQ5Mjc4MTU2OQ.G-WrRk.uy8aDpAICbWzTkej03gwPqNN96EFaC54Ghm6Ac")
+# 環境変数 DISCORD_TOKEN からトークンを取得して起動
+bot.run(os.getenv("DISCORD_TOKEN"))
