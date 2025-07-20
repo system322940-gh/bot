@@ -68,4 +68,4 @@ async def ping(interaction: discord.Interaction):
 # ↓ 不要な /say は削除済み
 
 # Bot起動
-bot.run("YOUR_BOT_TOKEN_HERE")  # ← トークンを自分のに差し替えてね
+bot.run("MTM5MzgwODA5NjQ5Mjc4MTU2OQ.G-WrRk.uy8aDpAICbWzTkej03gwPqNN96EFaC54Ghm6Ac")  # ← トークンを自分のに差し替えてね
