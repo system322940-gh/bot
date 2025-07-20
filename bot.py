@@ -116,5 +116,21 @@ async def rp(interaction: discord.Interaction, title: str, role: discord.Role):
     await interaction.response.send_message("✅ ロール付与ボタンを作成しました。", ephemeral=True)
     await interaction.channel.send(embed=discord.Embed(title=title, color=discord.Color.green()), view=view)
 
+# /help コマンド
+@tree.command(name="info", description="ヘルプを埋め込みで表示します")
+async def info(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="ヘルプ",
+        description="
+        /auth - 認証パネルを作成します。
+        /rp - ロールパネルを作成します。
+        /kick - メンバーをキックします。管理者専用です。
+        /ban - メンバーをbanします。管理者専用です。
+        /ping - botの反応速度を表示します。
+        ",
+        color=discord.Color.orange()
+    )
+    await interaction.response.send_message(embed=embed)
+
 # 環境変数 DISCORD_TOKEN からトークンを取得して起動
 bot.run(os.getenv("DISCORD_TOKEN"))
