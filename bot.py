@@ -132,5 +132,5 @@ async def info(interaction: discord.Interaction):
     )
     await interaction.response.send_message(embed=embed)
 
-# 環境変数 DISCORD_TOKEN からトークンを取得して起動
-bot.run(os.getenv("DISCORD_TOKEN"))
+# 環境変数 DISCORD_TOKEN からトークンを取得して起動(Discordにト*クンリセットされるので環境変数名変えたけど名前のセンスが小2だけどゆるして)
+bot.run(os.getenv("KIDOU_MOJI"))
