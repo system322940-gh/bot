@@ -121,7 +121,7 @@ async def rp(interaction: discord.Interaction, title: str, role: discord.Role):
 async def info(interaction: discord.Interaction):
     embed = discord.Embed(
         title="ヘルプ",
-        description="`/auth` - 認証パネルを作成します。　`/rp` - ロールパネルを作成します。　`/kick` - メンバーをキックします。管理者専用です。　`/ban` - メンバーをbanします。管理者専用です。　`/ping` - botの反応速度を表示します。,
+        description="`/auth` - 認証パネルを作成します。　`/rp` - ロールパネルを作成します。　`/kick` - メンバーをキックします。管理者専用です。　`/ban` - メンバーをbanします。管理者専用です。　`/ping` - botの反応速度を表示します。",
         color=discord.Color.orange()
     )
     await interaction.response.send_message(embed=embed)
