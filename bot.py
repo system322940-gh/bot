@@ -3,6 +3,8 @@ from discord.ext import commands
 from discord import app_commands
 import random
 import os
+from keep_alive import keep_alive
+keep_alive()
 
 intents = discord.Intents.default()
 intents.members = True
