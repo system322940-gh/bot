@@ -4,6 +4,7 @@ from discord import app_commands
 import random
 import os
 from keep_alive import keep_alive
+
 keep_alive()
 
 intents = discord.Intents.default()
@@ -19,6 +20,7 @@ async def on_ready():
     await tree.sync()
     print(f"✅ ログインしました: {bot.user} ({bot.user.id})")
 
+# メンバー数表示
 @tree.command(name="servermember", description="サーバーのメンバー数を表示します")
 async def servermember(interaction: discord.Interaction):
     if not interaction.guild:
@@ -27,6 +29,7 @@ async def servermember(interaction: discord.Interaction):
     count = interaction.guild.member_count
     await interaction.response.send_message(f"このサーバーのメンバー数は **{count}人** です！")
 
+# BAN
 @tree.command(name="ban", description="指定したユーザーをBANします（管理者用）")
 @app_commands.describe(user="BANしたいユーザー", reason="理由（省略可）")
 async def ban(interaction: discord.Interaction, user: discord.Member, reason: str = "理由なし"):
@@ -39,6 +42,7 @@ async def ban(interaction: discord.Interaction, user: discord.Member, reason: st
     except Exception as e:
         await interaction.response.send_message(f"BANに失敗: {str(e)}", ephemeral=True)
 
+# KICK
 @tree.command(name="kick", description="指定したユーザーをKICKします（管理者用）")
 @app_commands.describe(user="KICKしたいユーザー", reason="理由（省略可）")
 async def kick(interaction: discord.Interaction, user: discord.Member, reason: str = "理由なし"):
@@ -51,11 +55,13 @@ async def kick(interaction: discord.Interaction, user: discord.Member, reason: s
     except Exception as e:
         await interaction.response.send_message(f"KICKに失敗: {str(e)}", ephemeral=True)
 
+# Ping
 @tree.command(name="ping", description="Botの応答速度を確認します")
 async def ping(interaction: discord.Interaction):
     latency = round(bot.latency * 1000)
     await interaction.response.send_message(f"🏓 Pong! 応答速度: {latency}ms")
 
+# 認証ボタンの処理
 class AuthButton(discord.ui.View):
     def __init__(self, user: discord.User, role: discord.Role):
         super().__init__(timeout=None)
@@ -91,6 +97,7 @@ class AuthModal(discord.ui.Modal, title="認証確認"):
         except:
             await interaction.response.send_message("❌ エラーが発生しました。", ephemeral=True)
 
+# /auth コマンド
 @tree.command(name="auth", description="認証用のボタンを作成します")
 @app_commands.describe(title="大きく表示される文字", role="付与するロール")
 async def auth(interaction: discord.Interaction, title: str, role: discord.Role):
@@ -98,6 +105,7 @@ async def auth(interaction: discord.Interaction, title: str, role: discord.Role)
     await interaction.response.send_message("✅ 認証メッセージを作成しました。", ephemeral=True)
     await interaction.channel.send(embed=discord.Embed(title=title, color=discord.Color.blue()), view=view)
 
+# /rp ロール付与ボタン
 class RoleButton(discord.ui.View):
     def __init__(self, role: discord.Role):
         super().__init__(timeout=None)
@@ -118,6 +126,7 @@ async def rp(interaction: discord.Interaction, title: str, role: discord.Role):
     await interaction.response.send_message("✅ ロール付与ボタンを作成しました。", ephemeral=True)
     await interaction.channel.send(embed=discord.Embed(title=title, color=discord.Color.green()), view=view)
 
+# /info コマンド
 @tree.command(name="info", description="ヘルプを埋め込みで表示します")
 async def info(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -127,10 +136,12 @@ async def info(interaction: discord.Interaction):
             "/rp - ロールパネルを作成します。\n"
             "/kick - メンバーをキックします。管理者専用です。\n"
             "/ban - メンバーをbanします。管理者専用です。\n"
-            "/ping - botの反応速度を表示します。"
+            "/ping - botの反応速度を表示します。\n"
+            "/servermember - メンバー数を表示します。"
         ),
         color=discord.Color.orange()
     )
     await interaction.response.send_message(embed=embed)
 
+# Bot起動
 bot.run(os.getenv("KIDOU_MOJI"))
